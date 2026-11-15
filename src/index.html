@@ -43,6 +43,11 @@
   #results tr.pick { cursor: pointer; }
   #results tr.pick:hover, #results tr.pick:focus { background: #1E2833; }
   .scroll { overflow-x: auto; }
+  .verdict { font-size: var(--fs-xl); font-weight: 600; margin: 0 0 0.5rem; }
+  .ok { color: #7EE2A8; } .bad { color: var(--warn); }
+  #verdict ul, #scanList { margin: 0.5rem 0; padding-left: 1.25rem; }
+  #verdict li, #scanList li { margin-bottom: 0.35rem; }
+  button.small { padding: 0.25rem 0.6rem; font-size: var(--fs-sm); margin-left: 0.5rem; }
   .views { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
   .views button { background: transparent; color: var(--text); border: 1px solid #4A525E; }
   .views button[aria-pressed=true] { background: #7DB9FF; color: #0B0E13; border-color: #7DB9FF; }
@@ -55,8 +60,12 @@
 <body data-view="planner">
 <main>
   <h1>Lunar Landing Site Navigator</h1>
-  <p class="muted">Compare landing sites and dates near the Moon's south pole: where the Sun and Earth sit against the skyline, how long they stay up, and what that means for power and direct communication with Earth. Sun and Earth positions come from JPL Horizons. Terrain comes from the LOLA elevation map. Select a point on the map or pick a site, then press Play to watch the light move.</p>
-
+  <p>Find out whether a spot near the Moon's south pole is a good place to land, why, and when.</p>
+  <ol>
+    <li><strong>Pick a landing date</strong> with the slider under the map.</li>
+    <li><strong>Select any point on the map</strong>, or press "Find the best sites for this date" and let the tool suggest some.</li>
+    <li><strong>Read the verdict</strong> under the map: suitable or not, the reasons, and the landing dates that work.</li>
+  </ol>
   <div class="views" role="group" aria-label="Choose a view">
     <button type="button" data-set-view="planner" aria-pressed="true">Mission planner</button>
     <button type="button" data-set-view="educator" aria-pressed="false">Educator</button>
@@ -64,8 +73,34 @@
   </div>
   <p id="viewNote" class="muted" style="margin-top:0.5rem"></p>
 
+  <section class="card" aria-labelledby="h-map">
+    <h2 id="h-map">South pole, lit as it will be</h2>
+    <div class="row" style="align-items:flex-end">
+      <div style="flex:3 1 20rem"><label for="mapScrub">Landing date (UTC): <span id="mapTime"></span></label><input id="mapScrub" type="range" min="0" max="1" step="1" value="0"></div>
+      <div style="flex:0 0 auto"><button id="mapPlay" type="button">Play</button></div>
+      <div style="flex:0 0 auto" class="checks"><label><input id="mapEarth" type="checkbox"> Show where Earth is visible</label></div>
+    </div>
+    <div style="position:relative;margin-top:1rem">
+      <canvas id="mapCanvas" width="600" height="600" style="width:100%;height:auto;display:block;border-radius:6px;background:#000" aria-hidden="true"></canvas>
+      <canvas id="mapHeat" width="300" height="300" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" aria-hidden="true"></canvas>
+      <svg id="mapOverlay" viewBox="0 0 600 600" style="position:absolute;inset:0;cursor:crosshair" role="img" aria-labelledby="mapTitle mapDesc">
+        <title id="mapTitle">Map of the lunar south pole within about 190 km of the pole</title>
+        <desc id="mapDesc">Terrain lit by the Sun at the chosen time. Black areas are in shadow. Rings mark 89, 88, 87, 86 and 85 degrees south. Dots mark the curated landing sites; the ringed dot is the selected site. Select any point to move the site there.</desc>
+        <g id="mapMarks"></g>
+      </svg>
+    </div>
+    <div style="margin-top:1rem"><button id="scanRun" type="button">Find the best sites for this date</button> <span id="scanStatus" class="status" role="status" style="margin-left:0.75rem"></span></div>
+    <ol id="scanList"></ol>
+    <p id="mapNote" class="muted" style="margin-top:0.5rem">Built from the LOLA elevation map at about 630 m per pixel and the Sun's position from JPL Horizons. Select any point to check it as a landing site. Green areas appear after a search and show where the Sun and Earth are both in view for most of the mission. The map and the search are a quick guide; the verdict below uses the site's own skyline, which is more precise.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-verdict" aria-live="polite">
+    <h2 id="h-verdict">Verdict for the selected site</h2>
+    <div id="verdict"><p class="muted">Working it out.</p></div>
+  </section>
+
   <section class="card" aria-labelledby="h-site">
-    <h2 id="h-site">Site and mission</h2>
+    <h2 id="h-site">Site, date and mission settings</h2>
     <div class="row">
       <div><label for="site">Landing site</label><select id="site"></select></div>
       <div><label for="lat">Latitude (°, south is negative)</label><input id="lat" type="number" step="0.0001" min="-90" max="90"></div>
@@ -101,24 +136,6 @@
         <div><label for="file">Replace the Sun and Earth table with another Horizons file</label><input id="file" type="file" accept=".txt,.csv,text/plain"></div>
       </div>
     </details>
-  </section>
-
-  <section class="card" aria-labelledby="h-map">
-    <h2 id="h-map">South pole, lit as it will be</h2>
-    <div class="row" style="align-items:flex-end">
-      <div style="flex:3 1 20rem"><label for="mapScrub">Time on the map (UTC): <span id="mapTime"></span></label><input id="mapScrub" type="range" min="0" max="1" step="1" value="0"></div>
-      <div style="flex:0 0 auto"><button id="mapPlay" type="button">Play</button></div>
-      <div style="flex:0 0 auto" class="checks"><label><input id="mapEarth" type="checkbox"> Show where Earth is visible</label></div>
-    </div>
-    <div style="position:relative;margin-top:1rem">
-      <canvas id="mapCanvas" width="600" height="600" style="width:100%;height:auto;display:block;border-radius:6px;background:#000" aria-hidden="true"></canvas>
-      <svg id="mapOverlay" viewBox="0 0 600 600" style="position:absolute;inset:0;cursor:crosshair" role="img" aria-labelledby="mapTitle mapDesc">
-        <title id="mapTitle">Map of the lunar south pole within about 190 km of the pole</title>
-        <desc id="mapDesc">Terrain lit by the Sun at the chosen time. Black areas are in shadow. Rings mark 89, 88, 87, 86 and 85 degrees south. Dots mark the curated landing sites; the ringed dot is the selected site. Select any point to move the site there.</desc>
-        <g id="mapMarks"></g>
-      </svg>
-    </div>
-    <p id="mapNote" class="muted" style="margin-top:0.5rem">Built from the LOLA elevation map at about 630 m per pixel and the Sun's position from JPL Horizons. Select any point to analyse it as a landing site. The map is a visual guide; the numbers below come from the site's own skyline, which is more precise.</p>
   </section>
 
   <section class="card" aria-labelledby="h-plain" data-views="public educator">
@@ -293,6 +310,7 @@ function render() {
   drawSky(sky, s);
   renderMission(s, t);
   if (mapT !== null) drawMapMarks();
+  requestVerdict();
 }
 
 function drawSky(sky, s) {
@@ -457,9 +475,10 @@ function setMapTime(t) {
   requestMap();
 }
 $('mapScrub').addEventListener('input', () => setMapTime(table.t0 + $('mapScrub').value * 3600000));
+$('mapScrub').addEventListener('change', () => { $('time').value = fmtUTC(mapT); syncScrub(); render(); });
 $('mapEarth').addEventListener('change', requestMap);
 $('mapPlay').addEventListener('click', () => {
-  if (playing) { clearInterval(playing); playing = null; $('mapPlay').textContent = 'Play'; return; }
+  if (playing) { clearInterval(playing); playing = null; $('mapPlay').textContent = 'Play'; $('time').value = fmtUTC(mapT); syncScrub(); render(); return; }
   $('mapPlay').textContent = 'Pause';
   playing = setInterval(() => setMapTime(mapT + 2 * 3600000 > table.t1 ? table.t0 : mapT + 2 * 3600000), 120);
 });
@@ -469,6 +488,88 @@ $('mapOverlay').addEventListener('click', (ev) => {
   $('lat').value = (-90 + (2 * Math.atan(r / (2 * N.R_MOON)) * 180) / Math.PI).toFixed(4);
   $('lon').value = N.wrap360((Math.atan2(X, -Y) * 180) / Math.PI).toFixed(4);
   $('site').value = SITES.length - 1; render();
+});
+
+
+// ---- Verdict: is this site suitable, why, and when --------------------------
+function getCons(panel) {
+  return { maxDarkH: $('cMaxDark').value === '' ? null : +$('cMaxDark').value, minEarthPct: $('cMinEarth').value === '' ? null : +$('cMinEarth').value, minFullSunH: panel && +$('cMinSun').value > 0 ? +$('cMinSun').value : null, landingVisible: $('cLanding').checked };
+}
+const fmtDay = (ms) => new Date(ms).toUTCString().slice(5, 16);
+let verdictTimer = null;
+function requestVerdict() { clearTimeout(verdictTimer); verdictTimer = setTimeout(renderVerdict, 150); }
+function renderVerdict() {
+  const s = site(), t0 = currentTime(), days = Math.max(1, Math.min(60, +$('days').value || 10)), m = Math.max(0, +$('margin').value || 0);
+  const type = $('panel').value, panel = type ? { type, facing: +$('facing').value || 0 } : null, cons = getCons(panel);
+  const runs = [], res = [];
+  for (let i = 0; i < 60; i++) { const r = N.evaluate(table, s, t0 + i * DAY, days, m, panel); if (!r) break; res.push({ t: t0 + i * DAY, r, pass: N.failures(r, cons).length === 0 }); }
+  if (!res.length) { $('verdict').innerHTML = '<p>This landing date is too close to the end of the position table. Choose an earlier date.</p>'; return; }
+  res.forEach((x, i) => { if (x.pass) { if (i && res[i - 1].pass) runs[runs.length - 1].end = x.t, runs[runs.length - 1].n++; else runs.push({ start: x.t, end: x.t, n: 1 }); } });
+  const now = res[0], r = now.r, tick = (ok) => (ok ? '<span class="ok">Yes.</span>' : '<span class="bad">No.</span>');
+  const pick = SITES[+$('site').value], name = pick.custom ? `${Math.abs(s.lat).toFixed(2)}°${s.lat < 0 ? 'S' : 'N'}, ${s.lon.toFixed(2)}°E` : pick.name.replace(/\s*\(.*\)$/, '');
+  let h = `<p class="verdict ${now.pass ? 'ok' : 'bad'}">${now.pass ? 'Suitable' : 'Not suitable'} for a ${days}-day mission landing ${fmtDay(now.t)}</p><p>${name}</p><h3 style="font-size:var(--fs-base);margin:0.75rem 0 0.25rem">Why</h3><ul>`;
+  if (cons.landingVisible) h += `<li>Sun above the skyline at landing? ${tick(r.sunAtLanding)}</li><li>Earth in view at landing, for a direct radio link? ${tick(r.earthAtLanding)}</li>`;
+  if (cons.maxDarkH != null) h += `<li>Longest dark stretch no more than ${cons.maxDarkH} hours? ${tick(r.longestDark <= cons.maxDarkH)} It is ${fmtDur(r.longestDark * 3600000)}.</li>`;
+  if (cons.minEarthPct != null) h += `<li>Earth in view at least ${cons.minEarthPct}% of the mission? ${tick(100 * r.earthShare >= cons.minEarthPct)} It is ${(100 * r.earthShare).toFixed(0)}%.</li>`;
+  if (cons.minFullSunH != null) h += `<li>At least ${cons.minFullSunH} full-sun hours? ${tick(r.fullSunHours >= cons.minFullSunH)} It is ${r.fullSunHours.toFixed(0)}.</li>`;
+  h += `<li>For reference: the Sun is in view ${(100 * r.sunShare).toFixed(0)}% of the mission, and Sun and Earth together ${(100 * r.bothShare).toFixed(0)}%.</li></ul>`;
+  h += `<h3 style="font-size:var(--fs-base);margin:0.75rem 0 0.25rem">When to land here</h3>`;
+  if (!runs.length) h += `<p>No landing date in the next ${res.length} days meets the limits at this site.</p>`;
+  else h += '<ul>' + runs.slice(0, 5).map((w) => `<li>${w.n === 1 ? fmtDay(w.start) + ': 1 landing date' : `${fmtDay(w.start)} to ${fmtDay(w.end)}: ${w.n} landing dates in a row`} <button type="button" class="small" data-t="${w.start}">Land on ${fmtDay(w.start).slice(0, 6)}</button></li>`).join('') + `</ul><p class="muted">Checked one landing date per day for the next ${res.length} days. A longer run means more room for the schedule to slip.</p>`;
+  if (!s.mask) h += '<p class="warn">No terrain data for this point, so the skyline is a smooth Moon and the verdict is optimistic.</p>';
+  else if (terrain && terrain.incomplete) h += '<p class="warn">Terrain data is incomplete around this point, so the verdict may be optimistic.</p>';
+  h += '<p class="muted">The limits come from "Hard constraints" in the Mission planner view. Change them there and the verdict updates.</p>';
+  $('verdict').innerHTML = h;
+  $('verdict').querySelectorAll('button[data-t]').forEach((b) => b.addEventListener('click', () => { $('time').value = fmtUTC(+b.dataset.t); syncScrub(); render(); setMapTime(+b.dataset.t); }));
+}
+for (const id of ['cMaxDark', 'cMinEarth', 'cMinSun', 'cLanding']) $(id).addEventListener('change', requestVerdict);
+
+// ---- Search: the best sites for a landing date -------------------------------
+const SCAN_P = 360, SCAN_E = 300, HEAT_P = 300, scanGrid = N.prepareMapGrid(demCoarse, SCAN_P, SCAN_E);
+$('scanRun').addEventListener('click', () => {
+  const t0 = currentTime(), days = Math.max(1, Math.min(60, +$('days').value || 10)), mast = +$('mast').value || 0, cons = getCons(null);
+  const stepH = 6, n = Math.floor((days * 24) / stepH) + 1, K = SCAN_P * SCAN_P;
+  if (t0 + days * DAY > table.t1) { $('scanStatus').textContent = 'Choose an earlier landing date.'; return; }
+  const both = new Uint16Array(K), earthC = new Uint16Array(K), sunC = new Uint16Array(K), run = new Uint16Array(K), darkMax = new Uint16Array(K), land = new Uint8Array(K);
+  $('scanRun').disabled = true;
+  let i = 0;
+  (function work() {
+    const e = N.ephemAt(table, t0 + i * stepH * 3600000);
+    const sun = N.lightMap(scanGrid, { lat: e.sLat, lon: e.sLon }, { mastM: mast }), earth = N.lightMap(scanGrid, { lat: e.eLat, lon: e.eLon }, { mastM: mast, D: e.D });
+    for (let k = 0; k < K; k++) {
+      const a = sun.vis[k], b = earth.vis[k];
+      if (i === 0) land[k] = a && b;
+      sunC[k] += a; earthC[k] += b; both[k] += a & b;
+      if (a) run[k] = 0; else if (++run[k] > darkMax[k]) darkMax[k] = run[k];
+    }
+    $('scanStatus').textContent = `Scanning the map: ${Math.round((100 * (i + 1)) / n)}%`;
+    if (++i < n) return setTimeout(work, 0);
+    const ctx = $('mapHeat').getContext('2d'), img = ctx.createImageData(HEAT_P, HEAT_P), cand = [], score = new Float32Array(K).fill(-1);
+    for (let k = 0; k < K; k++) {
+      const ok = scanGrid.lat[k] <= -85 && (!cons.landingVisible || land[k]) && (cons.maxDarkH == null || darkMax[k] * stepH <= cons.maxDarkH) && (cons.minEarthPct == null || (100 * earthC[k]) / n >= cons.minEarthPct);
+      if (!ok) continue;
+      const sc = both[k] / n;
+      score[k] = sc;
+      cand.push({ k, sc, sun: sunC[k] / n });
+    }
+    for (let j = 0; j < HEAT_P; j++) for (let i2 = 0; i2 < HEAT_P; i2++) {
+      const X = -MAP_E + ((i2 + 0.5) * 2 * MAP_E) / HEAT_P, Y = -MAP_E + ((j + 0.5) * 2 * MAP_E) / HEAT_P;
+      const sc = score[Math.floor((Y + SCAN_E) / scanGrid.cell) * SCAN_P + Math.floor((X + SCAN_E) / scanGrid.cell)], q = 4 * (j * HEAT_P + i2);
+      if (sc >= 0) { img.data[q] = 60; img.data[q + 1] = 225; img.data[q + 2] = 130; img.data[q + 3] = 60 + 150 * sc; }
+    }
+    ctx.putImageData(img, 0, 0);
+    cand.sort((p, q) => q.sc - p.sc || q.sun - p.sun);
+    const picks = [], minPx = 12 / scanGrid.cell;
+    for (const c of cand) {
+      const x = c.k % SCAN_P, y = Math.floor(c.k / SCAN_P);
+      if (picks.every((p) => Math.hypot(p.x - x, p.y - y) >= minPx)) picks.push({ ...c, x, y });
+      if (picks.length === 5) break;
+    }
+    $('scanList').innerHTML = picks.map((p) => `<li>${Math.abs(scanGrid.lat[p.k]).toFixed(2)}°S, ${scanGrid.lon[p.k].toFixed(1)}°E: Sun and Earth together for ${(100 * p.sc).toFixed(0)}% of the mission <button type="button" class="small" data-lat="${scanGrid.lat[p.k].toFixed(4)}" data-lon="${scanGrid.lon[p.k].toFixed(4)}">Check this site</button></li>`).join('');
+    $('scanList').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { $('lat').value = b.dataset.lat; $('lon').value = b.dataset.lon; $('site').value = SITES.length - 1; render(); }));
+    $('scanStatus').textContent = cand.length ? `For a ${days}-day mission landing ${fmtDay(t0)}: ${((100 * cand.length) / scanGrid.lat.filter((v) => v <= -85).length).toFixed(1)}% of the area south of 85°S meets the limits (green). Top ${picks.length} spots listed, at least 12 km apart. This is a quick scan at 1.7 km per point: check a spot to get its full verdict.` : `For a ${days}-day mission landing ${fmtDay(t0)}, nowhere south of 85°S meets the limits. Try another date or relax the limits in the Mission planner view.`;
+    $('scanRun').disabled = false;
+  })();
 });
 
 // ---- Layer 5: comparison ----------------------------------------------------
