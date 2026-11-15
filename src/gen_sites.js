@@ -18,7 +18,7 @@ const list=[
   {name:'Apollo 11 (no terrain map)',lat:0.67408,lon:23.47297},
   {name:'Apollo 17 (approx., no terrain map)',lat:20.1908,lon:30.7717},
 ];
-const t=N.parseHorizons(fs.readFileSync('horizons.txt','utf8'));
+const t=N.parseHorizons(fs.readFileSync('../data/horizons.txt','utf8'));
 for(const s of list){
   if(s.lat>-78.5)continue;
   const m=N.computeMask(dem,{lat:s.lat,lon:s.lon,mastM:2});

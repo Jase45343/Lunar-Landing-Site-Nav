@@ -2,7 +2,7 @@
 const N = require('./engine.js'); const fs = require('fs');
 const load = (f, s) => { const b = fs.readFileSync(f); return N.demFromBuffer(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), s); };
 const coarse = load('dem_coarse.bin', 0.48), full = load('dem.bin', 0.24);
-const table = N.parseHorizons(fs.readFileSync('horizons.txt', 'utf8'));
+const table = N.parseHorizons(fs.readFileSync('../data/horizons.txt', 'utf8'));
 global.window = {}; eval(fs.readFileSync('sites.js', 'utf8'));
 let t0 = Date.now(); const grid = N.prepareMapGrid(coarse, 600, 190); console.log('grid ms', Date.now() - t0);
 let agree = 0, total = 0, earthAgree = 0;

@@ -30,7 +30,7 @@ Five layers, each using only the one below it:
 
 ## Data
 
-- **Sun and Earth positions:** NASA JPL Horizons, hourly sub-solar point, sub-Earth point and Earth-Moon distance, 15 November 2026 to 15 November 2027 (`src/horizons.txt`).
+- **Sun and Earth positions:** NASA JPL Horizons, hourly sub-solar point, sub-Earth point and Earth-Moon distance, 15 November 2026 to 15 November 2027 (`data/horizons.txt`).
 - **Terrain:** NASA Lunar Reconnaissance Orbiter, Lunar Orbiter Laser Altimeter (LOLA) polar elevation map `LDEM_60S_240M`, cropped to 78°S (`dem.bin`) and averaged to 480 m for the built-in map.
 - **Frame:** Moon mean-Earth (MOON_ME), longitude positive east, heights above a 1,737.4 km sphere, times in UTC.
 
@@ -41,7 +41,7 @@ Five layers, each using only the one below it:
 - Slip tolerance, constraints and the mark pass hand-built cases (`src/test_decision.js`).
 - The floor of Shackleton crater comes out permanently dark across the full year.
 
-Run the tests with `node src/test.js`, `node src/test_terrain.js` and `node src/test_decision.js`.
+Run the tests from `src/`: `node test.js`, `node test_terrain.js` and `node test_decision.js`.
 
 ## Limits
 
@@ -49,6 +49,15 @@ Run the tests with `node src/test.js`, `node src/test_terrain.js` and `node src/
 - Visibility uses the centre of each disk. A partly hidden Sun counts as all or nothing.
 - The 240 m map misses boulders and small ridges near a lander. The map view uses about 630 m per pixel and is a visual guide.
 - Not modelled: landing safety, temperature, ground stations, link budgets, battery sizing, and Earth passing in front of the Sun.
+
+## What is where
+
+| Folder | Contents |
+|---|---|
+| `index.html`, `slides.html`, `dem.bin` | The live tool, the project demo, and the 240 m terrain map the tool loads |
+| `src/` | Source files, tests and the build script |
+| `data/` | The JPL Horizons table and a description of every dataset |
+| `docs/` | The model specification and the resources we used |
 
 ## Rebuilding
 
