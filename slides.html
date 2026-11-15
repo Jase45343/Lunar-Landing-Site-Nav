@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar Landing Site Navigator: project demo</title>
+<!-- Slides written with AI assistance (Claude, Anthropic), directed and reviewed by the team. -->
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #05070A; color: #ECEEF1; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .slide { container-type: inline-size; width: min(100vw, 177.78vh); aspect-ratio: 16 / 9; margin: 0 auto 1.5vh; background: #0B0E13; border: 1px solid #2C333D; padding: 5cqw 6cqw; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; page-break-after: always; }
+  h1 { font-size: 5.6cqw; line-height: 1.1; margin: 0 0 2cqw; }
+  h2 { font-size: 3.6cqw; line-height: 1.15; margin: 0 0 2.4cqw; }
+  p, li { font-size: 2.2cqw; line-height: 1.45; margin: 0 0 1.2cqw; }
+  ul, ol { margin: 0; padding-left: 3cqw; }
+  .lead { font-size: 3cqw; color: #7DB9FF; }
+  .muted { color: #B9BEC6; font-size: 1.8cqw; }
+  .sun { color: #F5B041; } .ok { color: #7EE2A8; } .bad { color: #FF9A8A; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; align-items: center; }
+  img { width: 100%; border-radius: 0.8cqw; display: block; }
+  .n { position: absolute; right: 2.5cqw; bottom: 1.8cqw; font-size: 1.5cqw; color: #B9BEC6; }
+  .card { border: 1px solid #2C333D; border-radius: 1cqw; padding: 2cqw 2.4cqw; background: #141920; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { font-size: 2cqw; text-align: left; padding: 0.9cqw 1.2cqw; border-bottom: 1px solid #2C333D; }
+  a { color: #7DB9FF; }
+  @media print { body { background: #0B0E13; } .slide { width: 100vw; margin: 0; border: 0; } }
+</style>
+</head>
+<body>
+
+<section class="slide">
+  <p class="lead">2026 NASA Space Apps Challenge · Lunar Landing Site Navigator</p>
+  <h1>Is this a good place to land on the Moon? Why? And when?</h1>
+  <p>Lunar Landing Site Navigator answers all three for any point near the south pole.</p>
+  <p class="muted">Team: Boitumelo Jase and teammate, Maseru, Lesotho</p>
+  <span class="n">1 / 7</span>
+</section>
+
+<section class="slide">
+  <h2>The problem: at the south pole, a few kilometres or a few days change everything</h2>
+  <ul>
+    <li>The <span class="sun">Sun</span> never climbs more than about 1.5° above level ground. A ridge can hide it for days.</li>
+    <li>Earth hovers near the horizon and dips behind the skyline, cutting the direct radio link.</li>
+    <li>Launches slip. Planners then have to re-check sites and dates fast.</li>
+    <li>Today's tools answer for one site and one moment at a time, in interfaces built for specialists.</li>
+  </ul>
+  <span class="n">2 / 7</span>
+</section>
+
+<section class="slide">
+  <div class="two">
+    <div>
+      <h2>What we built</h2>
+      <p>A map of the south pole, lit as it will be at any hour of the next year. Shadows come from real NASA terrain.</p>
+      <p>Select any point. The tool says <span class="ok">suitable</span> or <span class="bad">not suitable</span>, gives the reasons, and lists the landing dates that work.</p>
+      <p class="muted">The image is the tool's own output for 15 November 2026, 12:00 UTC.</p>
+    </div>
+    <img src="map.png" alt="The lunar south pole as drawn by the tool: sunlit crater rims and ridges on the right, deep shadow on the left and inside craters.">
+  </div>
+  <span class="n">3 / 7</span>
+</section>
+
+<section class="slide">
+  <h2>Using it takes three steps</h2>
+  <div class="two">
+    <ol>
+      <li>Pick a landing date.</li>
+      <li>Select a point on the map, or let the tool find the best sites for that date.</li>
+      <li>Read the verdict: suitable or not, why, and when.</li>
+    </ol>
+    <div class="card">
+      <p><strong>Ridge next to Shackleton crater, 10-day mission</strong></p>
+      <p class="bad">Landing 15 Nov 2026: not suitable. Earth is behind the skyline at touchdown.</p>
+      <p class="ok">Landing 17 to 24 Nov: suitable. Sun up throughout, 8 landing dates in a row.</p>
+      <p class="muted">Next windows: 14 to 21 Dec, 10 to 13 Jan.</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:2cqw">Three views of the same model: Mission planner, Educator and Explorer for the public.</p>
+  <span class="n">4 / 7</span>
+</section>
+
+<section class="slide">
+  <h2>How it works: NASA open data in, a decision out</h2>
+  <table>
+    <tr><th>Layer</th><th>What it does</th><th>Data</th></tr>
+    <tr><td>1. Geometry</td><td>Where the Sun and Earth sit in the site's sky</td><td>JPL Horizons</td></tr>
+    <tr><td>2. Horizon</td><td>The terrain skyline around the site</td><td>LRO LOLA elevation map, 240 m</td></tr>
+    <tr><td>3. Events</td><td>Rises, sets and time remaining</td><td></td></tr>
+    <tr><td>4. Metrics</td><td>Sunlight, darkness, Earth view, three solar panel types</td><td></td></tr>
+    <tr><td>5. Decision</td><td>Limits, comparison of sites and dates, room for the schedule to slip</td><td></td></tr>
+  </table>
+  <p class="muted" style="margin-top:2cqw">Runs in the browser as one file. No server, so it cannot go down during a review.</p>
+  <span class="n">5 / 7</span>
+</section>
+
+<section class="slide">
+  <h2>How we know it is right, and where it is not yet proven</h2>
+  <div class="two">
+    <div>
+      <p class="ok"><strong>Checked</strong></p>
+      <ul>
+        <li>Sun and Earth positions match JPL Horizons within 0.003° at Apollo 11 and next to the pole.</li>
+        <li>The skyline method passes four terrain cases with known answers.</li>
+        <li>Shackleton crater's floor stays dark all year, as it does in reality.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="bad"><strong>Not yet proven</strong></p>
+      <ul>
+        <li>Rise and set times against terrain have no independent check yet.</li>
+        <li>The Sun and Earth are treated as points, not disks.</li>
+        <li>"Suitable" covers sunlight and Earth view only, not landing safety.</li>
+      </ul>
+    </div>
+  </div>
+  <span class="n">6 / 7</span>
+</section>
+
+<section class="slide">
+  <h2>What comes next</h2>
+  <ul>
+    <li>Check rise and set times against NASA's two-hourly south-pole illumination frames.</li>
+    <li>Use the 20 m LOLA maps close to each site, and count partial sunlight.</li>
+    <li>Add a 3D terrain view of the selected site.</li>
+  </ul>
+  <p style="margin-top:2.5cqw">Try it: <a href="https://jase45343.github.io/Lunar-Landing-Site-Nav/">jase45343.github.io/Lunar-Landing-Site-Nav</a></p>
+  <p>Code: <a href="https://github.com/Jase45343/Lunar-Landing-Site-Nav">github.com/Jase45343/Lunar-Landing-Site-Nav</a></p>
+  <p class="muted">Data: NASA JPL Horizons and NASA LRO LOLA. Code and slides written with AI assistance (Claude, Anthropic), directed and reviewed by the team.</p>
+  <span class="n">7 / 7</span>
+</section>
+
+</body>
+</html>
