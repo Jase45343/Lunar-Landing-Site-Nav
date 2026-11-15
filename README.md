@@ -4,6 +4,10 @@ Compare landing sites and landing dates near the Moon's south pole. Pick a site,
 
 Built for the 2026 NASA Space Apps Challenge, "Lunar Landing Site Navigator".
 
+Team Ask How and Why: Kananelo Makhahlela (Software Engineer) and Boitumelo Jase (Solutions Engineer).
+
+Project demo: `slides.html`.
+
 ## Use it
 
 Open `index.html`. It is one self-contained file and needs no server.
